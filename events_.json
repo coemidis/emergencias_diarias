@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "fecha": "24/11/2025",
+    "hora_corte": "09:00",
+    "impacto_clave": "PN Juntos: 1 hogar afectado (Huánuco–Puerto Inca)"
+  },
+  "events": [
+    {
+      "id": 1,
+      "departamento": "Huánuco",
+      "provincia": "Puerto Inca",
+      "distrito": "Puerto Inca",
+      "fecha": "20/11/2025",
+      "tipo": "Inundación (Río Sungaroyacu)",
+      "afectacion_general": "23 viviendas afectadas",
+      "afectacion_midis": "PN Juntos: 1 hogar",
+      "estado": "En proceso",
+      "acciones": "EDAN en curso",
+      "lat": -9.380,
+      "lon": -74.965
+    },
+    {
+      "id": 2,
+      "departamento": "Apurímac",
+      "provincia": "Aymaraes",
+      "distrito": "Chalhuanca",
+      "fecha": "22/11/2025",
+      "tipo": "Incendio forestal",
+      "afectacion_general": "Pastizales afectados",
+      "afectacion_midis": "Sin novedad",
+      "estado": "Activa",
+      "acciones": "En proceso de extinción",
+      "lat": -14.289,
+      "lon": -73.235
+    }
+  ]
+}
