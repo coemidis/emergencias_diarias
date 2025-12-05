@@ -151,6 +151,34 @@
     font-size: 12px;
   }
 
+  /* NUEVO: toggle para base de fecha en rango personalizado */
+  .date-mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .date-mode-toggle span {
+    font-size: 11px;
+    color: #555;
+  }
+
+  .date-mode-btn {
+    border-radius: 999px;
+    border: 1px solid #c0c7ff;
+    background: #ffffff;
+    padding: 3px 8px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .date-mode-btn.active {
+    background: var(--azul-midis);
+    color: #ffffff;
+    border-color: var(--azul-midis);
+  }
+
   main {
     padding: 12px 18px 18px;
     max-width: 1400px;
@@ -406,6 +434,12 @@
             <label>Hasta:
               <input type="date" id="fecha-hasta" />
             </label>
+            <!-- NUEVO: selector de base de fecha para rango personalizado -->
+            <div class="date-mode-toggle">
+              <span>Rango por:</span>
+              <button type="button" class="date-mode-btn active" data-date-mode="evento">Fecha de evento</button>
+              <button type="button" class="date-mode-btn" data-date-mode="registro">Fecha de registro</button>
+            </div>
             <button id="btn-aplicar-fechas" class="btn btn-outline">Aplicar</button>
           </div>
         </div>
@@ -494,7 +528,7 @@
           Distribución por tipo de evento
           <span class="badge" id="badge-eventos">0 tipos</span>
         </div>
-        <!-- NUEVO: pestañas internas -->
+        <!-- pestañas internas existentes -->
         <div class="chart-toggle">
           <button class="chart-toggle-btn active" data-tipos-mode="evento">Por evento</button>
           <button class="chart-toggle-btn" data-tipos-mode="region">Por Región</button>
@@ -602,6 +636,9 @@ let currentMode = '7d';    // '7d' | '30d' | 'custom'
 /* NUEVO: modo del gráfico de tipos y caché de eventos del rango */
 let chartTiposMode = 'evento';   // 'evento' | 'region'
 let eventosRangoCache = [];
+
+/* NUEVO: base de fecha para rango personalizado ('evento' | 'registro') */
+let customDateBasis = 'evento';
 
 /* === Utilidades de fecha/Excel === */
 
@@ -952,7 +989,7 @@ function construirDashboard(meta, eventosFiltrados, fechaDesde, fechaHasta) {
   document.getElementById('kpi-total-detalle').textContent =
     `Eventos registrados entre ${formatFechaCorta(fechaDesde)} y ${formatFechaCorta(fechaHasta)}`;
 
-  /* NUEVO: delega al modo seleccionado (evento / región) */
+  /* Delegado al modo seleccionado (evento / región) */
   updateChartTiposFromEventos(eventosFiltrados);
 
   const idsEnRango = new Set(eventosFiltrados.map(e => e.id_evento));
@@ -1130,7 +1167,7 @@ function construirDashboard(meta, eventosFiltrados, fechaDesde, fechaHasta) {
     tr.innerHTML =
       `<td>${idx + 1}</td>` +
       `<td>${e.departamento}, ${e.provincia}, ${e.distrito}</td>` +
-      `<td>${e.fechaEvtStr || e.fechaRegStr || ''}<br><small>${e.tipo || 'Sin clasificar'}</small></td>` +  <!-- CAMBIADO -->
+      `<td>${e.fechaEvtStr || e.fechaRegStr || ''}<br><small>${e.tipo || 'Sin clasificar'}</small></td>` +
       `<td>${e.resumen_general || '—'}</td>` +
       `<td>${tieneAfectacion ? 'Sí' : 'No'}</td>` +
       `<td>${renderEstadoPill(estado)}</td>`;
@@ -1256,7 +1293,18 @@ function aplicarRangoActual() {
   }
 
   const eventos = datosBase.eventosAll.filter(e => {
-    const d = new Date(e.fechaEvtJs.getFullYear(), e.fechaEvtJs.getMonth(), e.fechaEvtJs.getDate());
+    let baseDate;
+    if (customDateBasis === 'registro') {
+      baseDate = (e.fechaRegJs instanceof Date && !isNaN(e.fechaRegJs.getTime()))
+        ? e.fechaRegJs
+        : e.fechaEvtJs;
+    } else {
+      baseDate = e.fechaEvtJs;
+    }
+
+    if (!(baseDate instanceof Date) || isNaN(baseDate.getTime())) return false;
+
+    const d = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
     return d >= fechaDesde && d <= fechaHasta;
   });
 
@@ -1291,6 +1339,22 @@ document.querySelectorAll('.chart-toggle-btn').forEach(btn => {
 
     if (eventosRangoCache && eventosRangoCache.length) {
       updateChartTiposFromEventos(eventosRangoCache);
+    }
+  });
+});
+
+/* NUEVO: listeners para "Fecha de evento" / "Fecha de registro" en rango personalizado */
+document.querySelectorAll('.date-mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const mode = btn.dataset.dateMode;
+    if (!mode || mode === customDateBasis) return;
+    customDateBasis = mode;
+
+    document.querySelectorAll('.date-mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    if (currentMode === 'custom') {
+      aplicarRangoActual();
     }
   });
 });
